@@ -1,0 +1,8 @@
+data
+data.zip
+.ipynb_checkpoints
+**/.ipynb_checkpoints
+**/__pycache__
+**/.pyc
+**/.vscode
+
