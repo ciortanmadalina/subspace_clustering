@@ -8,9 +8,9 @@ import pandas as pd
 import scripts.internal_scores as validation
 from sklearn import mixture
 from sklearn.cluster import KMeans
+from sklearn.decomposition import PCA
 from sklearn.metrics.cluster import adjusted_rand_score, silhouette_score
 from tqdm import tqdm
-from sklearn.decomposition import PCA
 
 sys.path.append("..")
 

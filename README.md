@@ -31,6 +31,14 @@ If a new model training is needed/desired, it can be performed by following the 
 
 ## Overview of the repository
 
+- __data__ folder contains all datasets used in our experiments. The content can be downloaded from this [Google Drive Link](https://drive.google.com/file/d/1GMfyzbiTL_5pY2Flyqz1r-BjGfii9xOn/view?usp=sharing)
+- __scripts__ folder contains the implementation of all functionalities
+- __docker__ folder contains the Dockerfile
+- __model__ contains the pretrained models
+
+
+Notebooks
+
 - Main.ipynb: demos subspace clustering on simulated data
 - BRCA.ipynb, KIRP.ipynb: analysis of RNA-seq data
 - Microarray_GMM.ipynb, Microarray_HDBSCAN.ipynb: analysis of microarray data
