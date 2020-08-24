@@ -255,6 +255,11 @@ def run_maximization(data, fitness_df, params, archive, exploration,
         best_individual, archive = maximize_individual(
             individual_str, data, params, archive, exploration)
         best_individual = prettify_best_individual(best_individual, data, params)
+        # check if the best individual already exists in solution
+        if solutions.shape[0] != 0 and str(best_individual["features"]) in [str(ii) for ii in solutions["features"].values]:
+            params["epochs"] += params["round_size"]
+            continue
+        
         solutions = solutions.append(best_individual,
                                          sort=False,
                                          ignore_index=True)

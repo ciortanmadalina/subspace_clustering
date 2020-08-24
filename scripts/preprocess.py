@@ -11,7 +11,7 @@ def preprocess_rna(df,
                    filename,
                    metric='euclidean',
                    normalize=True,
-                   path='data/rna_data'):
+                   path='../data/rna_data'):
     """[summary]
 
     Arguments:
@@ -24,7 +24,7 @@ def preprocess_rna(df,
     Keyword Arguments:
         metric {str} -- [description] (default: {'euclidean'})
         normalize {bool} -- [description] (default: {True})
-        path {str} -- [description] (default: {'data/rna_data'})
+        path {str} -- [description] (default: {'../data/rna_data'})
     """
 
     if normalize == False:

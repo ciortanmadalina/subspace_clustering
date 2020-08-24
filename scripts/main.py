@@ -24,7 +24,8 @@ def discovery_analysis(data,
                        metric='correlation',
                        method="adapted_ratkowsky_lance",
                        clustering="hdbscan",
-                       max_ranking_2d=None):
+                       max_ranking_2d=None,
+                       model_file_2d = '../models/gmm_arl.h5'):
     """Performs the unsupervised analysis and returns top
     nb_top_subspaces identified subspaced. 
 
@@ -63,7 +64,7 @@ def discovery_analysis(data,
     #                                     add_close_population=False)
     # GMM + Adapted ratkowski lance performs better than hdbscan, even when the number
     # of clusters is not determined
-    model_file_2d = 'models/gmm_arl.h5'
+    
     population, _ = features_2d.run(data,
                                     n_clusters,
                                     meta_features,
@@ -117,7 +118,7 @@ def semi_supervised_analysis(seeds,
                              redundant_threshold=0.5,
                              metric='correlation',
                              method="adapted_ratkowsky_lance",
-                             model_file=f'models/gmm_arl.h5',
+                             model_file=f'../models/gmm_arl.h5',
                              clustering="gmm"):
     """Performs the semi-supervised analysis for each of the
     starting subsets in seeds.
@@ -135,7 +136,7 @@ def semi_supervised_analysis(seeds,
         redundant_threshold {float} -- [description] (default: {0.5})
         metric {str} -- [description] (default: {'correlation'})
         method {str} -- [description] (default: {"adapted_ratkowsky_lance"})
-        model_file {[type]} -- [description] (default: {f'models/gmm_arl.h5'})
+        model_file {[type]} -- [description] (default: {f'../models/gmm_arl.h5'})
         clustering {str} -- [description] (default: {"gmm"})
 
     Returns:
@@ -157,7 +158,7 @@ def semi_supervised_analysis(seeds,
     #                                     add_close_population=False)
     # GMM + Adapted ratkowski lance performs better than hdbscan, even when the number
     # of clusters is not determined
-    model_file_2d = 'models/gmm_arl.h5'
+    model_file_2d = '../models/gmm_arl.h5'
     population, n = features_2d.run(data,
                                     n_clusters,
                                     meta_features,
@@ -196,7 +197,8 @@ def evaluate_subspace(subspace,
         "methods": ["adapted_ratkowsky_lance", "silhouette"],
         "truth_methods": ["ari"],
         "y": truth,
-        "clustering": clustering
+        "clustering": clustering,
+        "pca": False
     }
 
 

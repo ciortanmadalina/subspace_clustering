@@ -213,6 +213,11 @@ def make_blob_data(n_samples,
         else:
             data_x, truth= make_multivariate_gaussian(
                 n_clusters, n_definingfeatures, n_samples, cov_max = cluster_std[k], random_state = 0)
+            
+        idx = np.arange(len(truth))
+        np.random.shuffle(idx)
+        data_x = data_x[idx]
+        truth = truth[idx]
 
         truths.append(truth)
         if data is None:
