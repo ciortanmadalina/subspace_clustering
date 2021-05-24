@@ -432,6 +432,8 @@ class validation:
         #compute nb
         nb = nt - nw
         #compute fitness
+        if nw == 0 or nb ==0 or nt ==0: # avoid division by 0
+            return 0
         self.validation = -((sw / nw - sb / nb) * math.sqrt(nw * nb)) / nt
         return self.validation
 

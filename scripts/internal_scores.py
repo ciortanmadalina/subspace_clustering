@@ -3,7 +3,7 @@ import math
 import numpy as np
 from scipy.spatial.distance import pdist, squareform
 from sklearn import metrics
-from sklearn.metrics.cluster import adjusted_rand_score
+from sklearn.metrics.cluster import adjusted_rand_score, normalized_mutual_info_score
 from sklearn.preprocessing import OneHotEncoder
 import scripts.validation_open_ensembles as val
 from scipy.spatial import distance
@@ -38,6 +38,13 @@ class validation:
         """
         ari = adjusted_rand_score(truth, pred)
         return ari
+    
+    def nmi(self, truth, pred):
+        """
+        Sklearn's adjusted_rand_score
+        """
+        s = normalized_mutual_info_score(truth, pred)
+        return s
     def ratkowsky_lance(self, data, pred):
         """
         The Ratkowsky-Lance index adaptation which gives

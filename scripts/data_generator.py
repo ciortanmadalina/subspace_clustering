@@ -6,7 +6,7 @@ import scripts.internal_scores as validation
 import scripts.plot_utils as plot_utils
 from sklearn import preprocessing
 from sklearn.cluster import KMeans
-from sklearn.datasets.samples_generator import (make_blobs, make_circles,
+from sklearn.datasets import (make_blobs, make_circles,
                                                 make_moons)
 from sklearn.decomposition import PCA
 from sklearn.metrics.cluster import adjusted_rand_score

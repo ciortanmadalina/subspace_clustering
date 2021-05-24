@@ -1,6 +1,7 @@
 import itertools
 import sys
 import time
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -75,6 +76,7 @@ def rank_features(data,
     #     meta_features["kstest"] = kstest
     meta_features["uniform"] = (meta_features["entropy"] > 0.95).astype(int)
     features_to_scale = ["mad", "dispersion", "amam", "mean_median", "spec"]
+    meta_features = meta_features.replace([np.inf, -np.inf], 0)
     scaled_values = preprocessing.MinMaxScaler().fit_transform(
         meta_features[meta_features["uniform"] == 0][features_to_scale].values)
 
@@ -99,7 +101,7 @@ def rank_features(data,
 
     t5 = time.time()
     print(f"Sorting and thresholds {round(t5-t4, 2)} sec")
-    if z_file is not None:
+    if z_file is not None and os.path.isfile(z_file):
         print("Loading clustering from file")
         Z = np.load(z_file)
     else:

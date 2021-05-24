@@ -7,7 +7,7 @@ RUN pip install tqdm \
     keras==2.3.1 \
     pandas \
     seaborn \
-    xlrd \
+    xlrd==1.2.0 \
     statsmodels \
     xgboost \
     sklearn \
@@ -15,6 +15,9 @@ RUN pip install tqdm \
     gseapy \
     scanpy==1.5.1 \
     lifelines \
+    leidenalg  \
+    glob2 \
+    xlrd==1.2.0 \
     Pillow
 RUN pip uninstall -y enum34
 RUN pip install hdbscan

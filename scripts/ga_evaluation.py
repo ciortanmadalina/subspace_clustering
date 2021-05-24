@@ -9,8 +9,9 @@ import scripts.internal_scores as validation
 from sklearn import mixture
 from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
-from sklearn.metrics.cluster import adjusted_rand_score, silhouette_score
+from sklearn.metrics.cluster import adjusted_rand_score, silhouette_score, normalized_mutual_info_score
 from tqdm import tqdm
+import scanpy.api as sc
 
 sys.path.append("..")
 
@@ -29,8 +30,30 @@ def random_sampling(data, truth, n_clusters, algo = "gmm"):
         ari = adjusted_rand_score(truth, pred)
         scores.append(ari)
     return np.median(scores)
+def run_leiden(data, leiden_n_neighbors=300):
+    """
+    Performs Leiden community detection on given data.
 
-def clustering_evaluation(features, data, params):
+    Args:
+        data ([type]): [description]
+        n_neighbors (int, optional): [description]. Defaults to 10.
+        n_pcs (int, optional): [description]. Defaults to 40.
+
+    Returns:
+        [type]: [description]
+    """
+    import scanpy.api as sc
+    n_pcs = 0
+    adata = sc.AnnData(data)
+    if leiden_n_neighbors > len(data)//3:
+        leiden_n_neighbors = len(data)//3
+    sc.pp.neighbors(adata, n_neighbors=leiden_n_neighbors,
+                    n_pcs=n_pcs, use_rep='X')
+    sc.tl.leiden(adata)
+    pred = adata.obs['leiden'].to_list()
+    pred = [int(x) for x in pred]
+    return pred
+def clustering_evaluation(features, data, params, full_eval = False):
     """
     Cluster subspace given by features and compute the unsupervised scores
     If the ground truth is available (y) also compute ARI
@@ -56,6 +79,9 @@ def clustering_evaluation(features, data, params):
         gmm = mixture.GaussianMixture(n_components=params["n_clusters"],
                       covariance_type="full", random_state=0)
         pred = gmm.fit_predict(input_data)
+        
+    if params["clustering"] == "leiden":
+        pred = run_leiden(input_data)
 
     frequencies = np.array(list(Counter(pred).values()))
     nb_invalid_clusters = len(
@@ -72,6 +98,15 @@ def clustering_evaluation(features, data, params):
     if params.get("y", None) is not None:
         for method in params["truth_methods"]:
             scores[method] = round(getattr(val, method)(params["y"], pred), 2)
+            
+    if full_eval:
+        if params.get("y", None) is not None:
+            scores["ari"] = round(getattr(val, "ari")(params["y"], pred), 2)
+            scores["nmi"] = round(getattr(val, "nmi")(params["y"], pred), 2)
+        scores["silhouette"] = round(getattr(val, "silhouette")(data[:, features], pred), 2)
+        scores["adapted_ratkowsky_lance"] = round(getattr(val, "adapted_ratkowsky_lance")(data[:, features], pred), 2)
+        scores["point_biserial"] = round(getattr(val, "point_biserial")(data[:, features], pred), 2)
+        
     scores['structure'] = f'{Counter(pred)}'
     return scores, pred
 
@@ -166,9 +201,9 @@ def evaluate_ga_result(globalResults, best_subspaces, truths):
     
     keys = list(globalResults.keys())
     columns = [
-        "experiment", "true_subspace_id", "pred_subspace_id", "identified_features",
+        "experiment", "true_subspace_id", "pred_subspace_id", "%intersect", "iou",
         "extra_features", "true_subspace", "pred_subspace", "missed_features",
-        "ari", "true_nb_clust", "pred_nb_clust"
+        "ari", "nmi", "true_nb_clust", "pred_nb_clust"
     ]
     eval_df = pd.DataFrame(columns=columns)
     for experiment in keys:
@@ -179,21 +214,27 @@ def evaluate_ga_result(globalResults, best_subspaces, truths):
             subspace_df = pd.DataFrame(columns=columns)
             for i in range(len(features)):
                 cur_subspace = features[i]
-                identified_features = len(np.intersect1d(cur_subspace,
-                                                         subspace)) / len(subspace)
+                intersect_size = len(np.intersect1d(cur_subspace, subspace)) 
+                union_size = len(np.unique(np.concatenate([cur_subspace, subspace])))
+                iou = intersect_size/union_size
+                identified_features = intersect_size/ len(subspace)
+                
                 extra_features = len(np.setdiff1d(cur_subspace, subspace))
+   
                 missed_features = np.setdiff1d(subspace, cur_subspace)
                 ari = adjusted_rand_score(truths[sid], predicted_partitions[i])
+                nmi = normalized_mutual_info_score(truths[sid], predicted_partitions[i])
+                
                 nb_clust_truth = len(np.unique(truths[sid]))
                 nb_clust_pred = len(np.unique(predicted_partitions[i]))
                 subspace_df.loc[subspace_df.shape[0]] = [
-                    experiment, sid, i, identified_features, extra_features,
-                    subspace, cur_subspace, missed_features, ari, nb_clust_truth,
+                    experiment, sid, i, identified_features, iou, extra_features,
+                    subspace, cur_subspace, missed_features, ari, nmi, nb_clust_truth,
                     nb_clust_pred
                 ]
-            subspace_df = subspace_df[subspace_df["identified_features"] ==
-                                      subspace_df["identified_features"].max()]
-            if subspace_df["identified_features"].max() == 0:
+            subspace_df = subspace_df[subspace_df["%intersect"] ==
+                                      subspace_df["%intersect"].max()]
+            if subspace_df["%intersect"].max() == 0:
                 subspace_df = subspace_df.iloc[:1]
             eval_df = pd.concat([eval_df, subspace_df],
                                 ignore_index=True,

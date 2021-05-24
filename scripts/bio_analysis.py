@@ -42,6 +42,7 @@ def clinical_data_analysis(additional_df, solutions, n_clusters):
     """
 
     subspace_pred = solutions["partition"]
+    ground_truth_subspace = solutions[solutions["rank_ari"] == 1].index.values[0]
     all_classes_raw = {}
     all_classes = {}
     for i, c in enumerate(additional_df.columns):
@@ -232,6 +233,7 @@ def plot_subspaces_with_best_meta(solutions, best_subspace_match, data,
 
     subspaces = solutions["features"].values
     partitions = solutions["partition"].values
+    silhouette = solutions["silhouette"].values.round(2)
     scores = solutions[solutions.columns[0]].values
     ncols = 5
     nrows = solutions.shape[0]//ncols
@@ -252,12 +254,18 @@ def plot_subspaces_with_best_meta(solutions, best_subspace_match, data,
         title = maping[best_subspace_match["additional_data" ].values[k]]
 
         score = best_subspace_match['ari'].values[k]
+        sil = silhouette[k]
         ax= plt.subplot(nrows, ncols, k+1)
         ax.axes.xaxis.set_ticklabels([])
         ax.axes.yaxis.set_ticklabels([])
-        fontweight = "normal" if k!= ground_truth_nb else "bold"
+        if k!= ground_truth_nb:
+            fontweight = "normal"  
+        else: 
+            fontweight = "bold"
+            score = solutions["ari"].values.round(2)[k]
+            title = "Ground truth"
         plt.title(
-            f"{k+1}) {title}\n ARI {score}  ({len(subspace)} feaures)",
+            f"{k+1}) {title}\n ARI {score}  ({len(subspace)} feaures)\nSilhouette {sil}",
             fontweight = fontweight
         )
         plt.scatter(pca_data[:, 0], pca_data[:, 1], c=predK, cmap = "coolwarm", alpha = 0.4, s = 6)

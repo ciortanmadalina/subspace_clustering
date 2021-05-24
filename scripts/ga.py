@@ -274,8 +274,13 @@ def run_maximization(data, fitness_df, params, archive, exploration,
 
 def prettify_best_individual(best_individual, data, params):
     best_individual["features"] = np.array(best_individual["features"].split('_')).astype(int)
-    _, pred = ga_evaluation.clustering_evaluation(best_individual["features"], data, params)
+    score, pred = ga_evaluation.clustering_evaluation(best_individual["features"], data, params, full_eval = True)
     best_individual["partition"] = pred
+    if "nmi" in score:
+        best_individual["nmi"] = score["nmi"]
+    best_individual["silhouette"] = score["silhouette"]
+    best_individual["adapted_ratkowsky_lance"] = score["adapted_ratkowsky_lance"]
+    best_individual["point_biserial"] = score["point_biserial"]
     return best_individual
 
 def maximize_individual(individual_str, data, params, archive, exploration):
@@ -530,3 +535,22 @@ def cluster_population(population, data, n_clusters, method, truth = None, thres
         by=params["loss"], ascending=False).reset_index(drop=True)
     print(f"Selecting {len(archive2D)} from {size_before_trim}")
     return archive2D
+
+
+def rank_solutions(solutions, data):
+    from sklearn.metrics import davies_bouldin_score
+
+    scores = []
+    for i in range(len(solutions)):
+        s = davies_bouldin_score(data[:, solutions.features.values[i]], solutions.partition.values[i])
+        scores.append(s)
+
+    solutions["davies_bouldin"] = scores
+    solutions["davies_bouldin_silhouette"] = solutions['silhouette'].rank(method='min', ascending = True)
+
+    solutions["rank_silhouette"] = solutions['silhouette'].rank(method='min', ascending = False)
+
+    solutions["rank_point_biserial"] = solutions['point_biserial'].rank(method='min', ascending = False)
+    solutions["rank_ari"] = solutions['ari'].rank(method='min', ascending = False)
+    solutions["rank_nmi"] = solutions['nmi'].rank(method='min', ascending = False)
+    return solutions

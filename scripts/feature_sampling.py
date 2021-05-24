@@ -25,6 +25,7 @@ def new_random_population(cur_data, params, exploration = None, population_size 
     Returns:
         [type] -- [description]
     """
+    print("RANDOM!!")
     if population_size is None:
         population_size = params["population_size"]
     initial_subspace_size = params["initial_subspace_size"]
@@ -32,12 +33,64 @@ def new_random_population(cur_data, params, exploration = None, population_size 
         exploration = np.zeros(cur_data.shape[1])
     population = []
     for i in range(population_size):
+        
         individual = np.sort(np.random.choice(params["selectable_non_red_features"],size=initial_subspace_size,replace=False, 
                                       p = equal_exploration_probs(exploration, params)))
         exploration= update_exploration(exploration, [individual])
         population.append(individual)
     population = np.stack(population)
     return population, exploration
+
+
+def new_imp_population(cur_data, params, exploration = None, population_size = None):
+    """[summary]
+
+    Arguments:
+        cur_data {[type]} -- [description]
+        params {[type]} -- [description]
+
+    Keyword Arguments:
+        exploration {[type]} -- [description] (default: {None})
+        population_size {[type]} -- [description] (default: {None})
+
+    Returns:
+        [type] -- [description]
+    """
+    if params["sampling_prob"][-1] ==1: # everything is random
+        return new_random_population(cur_data, params, exploration , population_size )
+
+    if population_size is None:
+        population_size = params["population_size"]
+    initial_subspace_size = params["initial_subspace_size"]
+    if exploration is None:
+        exploration = np.zeros(cur_data.shape[1])
+    meta_features = params["meta_features"]
+    features = meta_features[(meta_features["1d"]!= -1)].index.values
+    p = get_imp_proba(params)
+    population = []
+    for i in range(population_size):
+        
+        individual = np.sort(np.random.choice(params["selectable_non_red_features"],size=initial_subspace_size,replace=False, 
+                                      p = p))
+        exploration= update_exploration(exploration, [individual])
+        population.append(individual)
+    population = np.stack(population)
+    return population, exploration
+def get_imp_proba(params):
+    meta_features = params["meta_features"]
+    features = meta_features[(meta_features["1d"]!= -1)].index.values
+
+    # important features are 5 times more likely than other features
+    n = 5
+    p = np.ones(len(params["selectable_non_red_features"]))
+    p0 = 1/(len(p) + n*len(features))
+    p = p * p0
+
+    p[np.where(np.isin(params["selectable_non_red_features"],features))[0]]=p0 * (n +1)
+    # fix floating point pb and requirement for sum (p) to be 1
+    if np.sum(p) != 1:
+        p[0] += 1-np.sum(p)
+    return p
 
 def create_and_evaluate_population(cur_data, params, archive, exploration, fitness_df):
     """[summary]
@@ -91,7 +144,8 @@ def create_and_evaluate_population(cur_data, params, archive, exploration, fitne
 #         print("Generating random population...")
         population_size = population_size - len(population)
         # create random individuals
-        remanining_population, exploration = new_random_population(
+#         remanining_population, exploration = new_random_population(
+        remanining_population, exploration = new_imp_population(
                     cur_data,
                     params,
                     exploration=exploration,
